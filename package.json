@@ -1,11 +1,11 @@
 {
-  "name": "MMM-MVVWiesty",
+  "name": "MMM-MVG",
   "version": "2.0.2",
   "description": "MagicMirror² Module to display public transport from Munich in Germany.",
-  "main": "MMM-MVVWiesty.js",
-  "author": "wiesty",
+  "main": "MMM-MVG.js",
+  "author": "daniensi",
   "license": "MIT",
-  "homepage": "https://github.com/wiesty/MMM-MVVWiesty",
+  "homepage": "https://github.com/daniensi/MMM-MVG",
   "keywords": [
     "magic mirror",
     "public transport",
@@ -14,6 +14,6 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/wiesty/MMM-MVVWiesty"
+    "url": "https://github.com/daniensi/MMM-MVG"
   }
 }

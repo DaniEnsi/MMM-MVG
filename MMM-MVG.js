@@ -1,4 +1,4 @@
-Module.register("MMM-MVVWiesty", {
+Module.register("MMM-MVG", {
     defaults: {
         maxEntries: 5,
         stopId: "de:09162:6",
@@ -19,7 +19,7 @@ Module.register("MMM-MVVWiesty", {
     },
 
     getStyles () {
-        return ["MMM-MVVWiesty.css"];
+        return ["MMM-MVG.css"];
     },
 
     getHeader () {
@@ -28,11 +28,11 @@ Module.register("MMM-MVVWiesty", {
 
     getDom () {
         const wrapper = document.createElement("div");
-        wrapper.classList.add("mvv-table-wrapper");
+        wrapper.classList.add("mvg-table-wrapper");
 
         if (this.filteredDepartures.length > 0) {
             const table = document.createElement("table");
-            table.classList.add("mvv-table");
+            table.classList.add("mvg-table");
 
             let bundledNotifications = {};
 
@@ -169,7 +169,7 @@ Module.register("MMM-MVVWiesty", {
     async loadDepartures () {
         const self = this;
         const stopId = this.config.stopId.replace(/:/g, "%3A");
-        const url = `https://www.mvv-muenchen.de/?eID=departuresFinder&action=get_departures&stop_id=${stopId}&requested_timestamp=${Math.floor(Date.now() / 1000)}&lines=`;
+        const url = `https://www.mvg-muenchen.de/?eID=departuresFinder&action=get_departures&stop_id=${stopId}&requested_timestamp=${Math.floor(Date.now() / 1000)}&lines=`;
         try {
             const response = await fetch(url);
             if (response.ok) {
@@ -183,10 +183,10 @@ Module.register("MMM-MVVWiesty", {
                     self.updateDom();
                 }
             } else {
-                Log.error("[MMM-MVVWiesty]: Failed to load departures or no departures found.");
+                Log.error("[MMM-MVG]: Failed to load departures or no departures found.");
             }
         } catch (error) {
-            Log.error("[MMM-MVVWiesty]: Error fetching departures:", error);
+            Log.error("[MMM-MVG]: Error fetching departures:", error);
         }
     },
 

@@ -1,4 +1,4 @@
-.MMM-MVVWiesty .module-content {
+.MMM-MVG .module-content {
   margin: 0;
   overflow: visible;
   display: flex;
@@ -7,13 +7,13 @@
   align-items: center;
 }
 
-.mvv-table-wrapper {
+.mvg-table-wrapper {
   width: auto;
   max-width: 100%;
   overflow: visible;
 }
 
-.mvv-table {
+.mvg-table {
   width: auto;
   table-layout: auto;
   border-collapse: collapse;
@@ -21,7 +21,7 @@
   line-height: 1.4;
 }
 
-.mvv-table td {
+.mvg-table td {
   padding: 0.15em 0.4em;
   vertical-align: middle;
   box-sizing: border-box;
@@ -83,15 +83,15 @@
   overflow: visible;
 }
 
-.mvv-table tr.departure-row {
+.mvg-table tr.departure-row {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.mvv-table tr.departure-row:nth-child(even) {
+.mvg-table tr.departure-row:nth-child(even) {
   background-color: rgba(255, 255, 255, 0.01);
 }
 
-.mvv-table tr:last-child {
+.mvg-table tr:last-child {
   border-bottom: none;
 }
 
@@ -128,23 +128,23 @@
   }
 }
 
-.top.center .MMM-MVVWiesty,
-.upper.third .MMM-MVVWiesty,
-.middle.center .MMM-MVVWiesty,
-.lower.third .MMM-MVVWiesty,
-.bottom.center .MMM-MVVWiesty,
-.bottom.bar .MMM-MVVWiesty {
+.top.center .MMM-MVG,
+.upper.third .MMM-MVG,
+.middle.center .MMM-MVG,
+.lower.third .MMM-MVG,
+.bottom.center .MMM-MVG,
+.bottom.bar .MMM-MVG {
   width: fit-content !important;
   max-width: 25vw !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
 
-.top.center .MMM-MVVWiesty .direction-cell,
-.upper.third .MMM-MVVWiesty .direction-cell,
-.middle.center .MMM-MVVWiesty .direction-cell,
-.lower.third .MMM-MVVWiesty .direction-cell,
-.bottom.center .MMM-MVVWiesty .direction-cell,
-.bottom.bar .MMM-MVVWiesty .direction-cell {
+.top.center .MMM-MVG .direction-cell,
+.upper.third .MMM-MVG .direction-cell,
+.middle.center .MMM-MVG .direction-cell,
+.lower.third .MMM-MVG .direction-cell,
+.bottom.center .MMM-MVG .direction-cell,
+.bottom.bar .MMM-MVG .direction-cell {
   max-width: 150px !important;
 }

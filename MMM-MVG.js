@@ -2,243 +2,164 @@ Module.register("MMM-MVG", {
     defaults: {
         maxEntries: 5,
         stopId: "de:09162:6",
-        filter: {},
-        displayNotifications: true,
-        displayBundled: false,
-        scrollSpeed: 40,
-        minTimeUntilDeparture: 0
+        destinationStopId: null,
+        lineFilter: [],           // e.g., ["U3", "U6"] to show only these lines
+        destinationFilter: [],    // e.g., ["Garching"] to show only trains going towards Garching
+        walkingTime: 0,
+        showDelay: true
     },
 
-    start () {
-        Log.info(`Starting module: ${this.name} with identifier: ${this.identifier}`);
+    start() {
         this.departures = [];
-        this.filteredDepartures = [];
-        this.loadDepartures();
-        this.scheduleUpdate();
-        this.scheduleMinuteUpdate();
+        // Stagger initial load based on module index to avoid simultaneous requests
+        const delay = Math.random() * 2000;
+        setTimeout(() => this.loadDepartures(), delay);
+        setInterval(() => this.loadDepartures(), 60000);
+        setInterval(() => this.updateDom(), 10000);
     },
 
-    getStyles () {
+    socketNotificationReceived(notification, payload) {
+        if (notification === "DEPARTURES" && payload.identifier === this.identifier) {
+            this.departures = payload.departures;
+            this.updateDom();
+        }
+    },
+
+    getStyles() {
         return ["MMM-MVG.css"];
     },
 
-    getHeader () {
-        return this.config.header && (this.config.header !== "") ? this.config.header : "MVV Abfahrtsmonitor";
+    getHeader() {
+        return this.config.header || "MVG";
     },
 
-    getDom () {
+    formatTime(timestamp) {
+        const d = new Date(timestamp);
+        return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+    },
+
+    getDom() {
         const wrapper = document.createElement("div");
-        wrapper.classList.add("mvg-table-wrapper");
+        wrapper.className = "mvg-wrapper";
 
-        if (this.filteredDepartures.length > 0) {
-            const table = document.createElement("table");
-            table.classList.add("mvg-table");
-
-            let bundledNotifications = {};
-
-            for (let i = 0; i < this.filteredDepartures.length && i < this.config.maxEntries; i++) {
-                const departure = this.filteredDepartures[i];
-                const row = document.createElement("tr");
-                row.classList.add("departure-row");
-
-                const iconCell = document.createElement("td");
-                iconCell.classList.add("icon-cell");
-                const lineImage = document.createElement("img");
-                lineImage.classList.add("productsvg");
-                lineImage.src = this.getLineIcon(departure.line.name);
-                iconCell.appendChild(lineImage);
-                row.appendChild(iconCell);
-
-                const lineCell = document.createElement("td");
-                lineCell.classList.add("line-cell");
-                lineCell.innerHTML = departure.line.number;
-                row.appendChild(lineCell);
-
-                const directionCell = document.createElement("td");
-                directionCell.classList.add("direction-cell");
-                directionCell.innerHTML = departure.direction;
-                row.appendChild(directionCell);
-
-                const timeCell = document.createElement("td");
-                timeCell.classList.add("time-cell");
-                timeCell.innerHTML = departure.departureLive;
-                row.appendChild(timeCell);
-
-                const untilCell = document.createElement("td");
-                untilCell.classList.add("until-cell");
-                const minutesUntilDeparture = this.calculateTimeUntil(departure.departureLive);
-                untilCell.innerHTML = minutesUntilDeparture >= 1 ? `in ${minutesUntilDeparture} Min` : "";
-                row.appendChild(untilCell);
-
-                table.appendChild(row);
-
-                if (this.config.displayNotifications && departure.notifications && departure.notifications.length > 0) {
-                    const notificationText = departure.notifications[0].text;
-
-                    if (this.config.displayBundled) {
-                        if (!bundledNotifications[departure.line.number]) {
-                            bundledNotifications[departure.line.number] = new Set();
-                        }
-                        bundledNotifications[departure.line.number].add(notificationText);
-                    } else {
-                        const notificationRow = document.createElement("tr");
-                        const notificationCell = document.createElement("td");
-                        notificationCell.colSpan = 5;
-                        notificationCell.classList.add("notification-cell");
-                        const notificationContainer = document.createElement("div");
-                        notificationContainer.classList.add("scroll-container");
-                        const scrollNotification = document.createElement("div");
-                        scrollNotification.classList.add("scroll-text");
-                        scrollNotification.innerHTML = notificationText;
-
-                        this.setScrollAnimation(scrollNotification, this.config.scrollSpeed);
-
-                        notificationContainer.appendChild(scrollNotification);
-                        notificationCell.appendChild(notificationContainer);
-                        notificationRow.appendChild(notificationCell);
-                        table.appendChild(notificationRow);
-                    }
-                }
-            }
-
-            // Falls displayBundled aktiviert ist, füge die gebündelten Benachrichtigungen hinzu
-            if (this.config.displayBundled) {
-                Object.keys(bundledNotifications).forEach(lineNumber => {
-                    bundledNotifications[lineNumber].forEach(notificationText => {
-                        const notificationRow = document.createElement("tr");
-                        const notificationCell = document.createElement("td");
-                        notificationCell.colSpan = 5;
-                        notificationCell.classList.add("notification-cell");
-                        const notificationContainer = document.createElement("div");
-                        notificationContainer.classList.add("scroll-container");
-                        const scrollNotification = document.createElement("div");
-                        scrollNotification.classList.add("scroll-text");
-                        scrollNotification.innerHTML = notificationText;
-
-                        this.setScrollAnimation(scrollNotification, this.config.scrollSpeed);
-
-                        notificationContainer.appendChild(scrollNotification);
-                        notificationCell.appendChild(notificationContainer);
-                        notificationRow.appendChild(notificationCell);
-                        table.appendChild(notificationRow);
-                    });
-                });
-            }
-
-            wrapper.appendChild(table);
-        } else {
-            wrapper.innerHTML = "Keine Abfahrten gefunden.";
+        if (!this.departures.length) {
+            wrapper.innerHTML = "Laden...";
+            return wrapper;
         }
 
+        const now = Date.now();
+        const walk = this.config.walkingTime || 0;
+        const showDelay = this.config.showDelay;
+        const hasDestination = !!this.config.destinationStopId;
+        const table = document.createElement("table");
+        table.className = "mvg-table";
+
+        // Add header row
+        const headerRow = document.createElement("tr");
+        headerRow.className = "header-row";
+        headerRow.innerHTML = `<th class="h-icon"></th><th class="h-line">Line</th><th class="h-dest">Destination</th><th class="h-time">Departure</th>` +
+            (hasDestination ? `<th class="h-arrival">Arrival</th>` : "") +
+            (walk > 0 ? `<th class="h-leave">Leave</th>` : "") +
+            `<th class="h-countdown"></th>`;
+        table.appendChild(headerRow);
+
+        // Filter out past departures and those too late to catch, limit to maxEntries
+        const entries = this.departures
+            .filter(d => {
+                const mins = Math.round((d.actualTime - now) / 60000);
+                const leaveIn = mins - walk;
+                return d.actualTime > now && leaveIn >= -1;
+            })
+            .slice(0, this.config.maxEntries);
+
+        for (const dep of entries) {
+            const mins = Math.max(0, Math.round((dep.actualTime - now) / 60000));
+            const leaveIn = mins - walk;
+            const leaveTime = new Date(dep.actualTime - walk * 60000);
+            const leaveStr = this.formatTime(leaveTime);
+            const actualStr = this.formatTime(dep.actualTime);
+
+            const row = document.createElement("tr");
+
+            // Icon
+            const iconCell = document.createElement("td");
+            iconCell.className = "icon";
+            const img = document.createElement("img");
+            img.src = this.file(`assets/${dep.type}.svg`);
+            img.className = "line-icon";
+            iconCell.appendChild(img);
+            row.appendChild(iconCell);
+
+            // Line
+            const lineCell = document.createElement("td");
+            lineCell.className = "line";
+            lineCell.textContent = dep.line;
+            row.appendChild(lineCell);
+
+            // Destination
+            const destCell = document.createElement("td");
+            destCell.className = "dest";
+            destCell.textContent = dep.destination;
+            row.appendChild(destCell);
+
+            // Departure time with delay indicator
+            const timeCell = document.createElement("td");
+            timeCell.className = "time";
+            if (showDelay && dep.delay !== 0) {
+                const delayClass = dep.delay > 0 ? "delay-late" : "delay-early";
+                const delayStr = dep.delay > 0 ? `+${dep.delay}` : `${dep.delay}`;
+                timeCell.innerHTML = `${actualStr} <span class="${delayClass}">${delayStr}</span>`;
+            } else {
+                timeCell.textContent = actualStr;
+            }
+            row.appendChild(timeCell);
+
+            // Arrival time (if destination configured)
+            if (hasDestination) {
+                const arrivalCell = document.createElement("td");
+                arrivalCell.className = "arrival";
+                arrivalCell.textContent = dep.arrivalTime || "-";
+                row.appendChild(arrivalCell);
+            }
+
+            // Leave time
+            const leaveCell = document.createElement("td");
+            leaveCell.className = "leave";
+            if (walk > 0) {
+                leaveCell.textContent = leaveStr;
+            }
+            row.appendChild(leaveCell);
+
+            // Countdown
+            const countdownCell = document.createElement("td");
+            countdownCell.className = "countdown";
+            if (walk > 0) {
+                if (leaveIn <= 0) {
+                    countdownCell.innerHTML = `<span class="urgent">Now</span>`;
+                } else if (leaveIn <= 3) {
+                    countdownCell.innerHTML = `<span class="soon">${leaveIn}m</span>`;
+                } else {
+                    countdownCell.textContent = `${leaveIn}m`;
+                }
+            } else {
+                countdownCell.textContent = `${mins}m`;
+            }
+            row.appendChild(countdownCell);
+
+            table.appendChild(row);
+        }
+
+        wrapper.appendChild(table);
         return wrapper;
     },
 
-    setScrollAnimation (scrollTextElement, scrollSpeed) {
-        document.body.appendChild(scrollTextElement);
-        const scrollWidth = scrollTextElement.scrollWidth;
-        document.body.removeChild(scrollTextElement);
-        scrollTextElement.style.width = `${scrollWidth}px`;
-        const duration = scrollWidth / scrollSpeed;
-        scrollTextElement.style.animationDuration = `${duration}s`;
-    },
-
-    getLineIcon (lineName) {
-        switch (lineName) {
-            case "Bus": case "MetroBus": case "MVV-Regionalbus": case "RegionalBus": case "ExpressBus": case "NachtBus":
-                return this.file("assets/bus.svg");
-            case "S-Bahn":
-                return this.file("assets/sbahn.svg");
-            case "Tram": case "NachtTram":
-                return this.file("assets/tram.svg");
-            case "U-Bahn":
-                return this.file("assets/ubahn.svg");
-            default:
-                return this.file("assets/default.svg");
-        }
-    },
-
-    calculateTimeUntil (departureTime) {
-        const now = new Date();
-        const departure = new Date();
-        departure.setHours(departureTime.split(":")[0]);
-        departure.setMinutes(departureTime.split(":")[1]);
-        const diff = Math.floor((departure - now) / (1000 * 60));
-        return diff >= 0 ? diff : 0;
-    },
-
-    async loadDepartures () {
-        const self = this;
-        const stopId = this.config.stopId.replace(/:/g, "%3A");
-        const url = `https://www.mvg-muenchen.de/?eID=departuresFinder&action=get_departures&stop_id=${stopId}&requested_timestamp=${Math.floor(Date.now() / 1000)}&lines=`;
-        try {
-            const response = await fetch(url);
-            if (response.ok) {
-                const data = await response.json();
-                if (data && data.departures && data.departures.length > 0) {
-                    self.departures = self.filterDepartures(data.departures);
-                    self.departures.sort((a, b) =>
-                        new Date(`1970-01-01T${a.departureLive}:00Z`) - new Date(`1970-01-01T${b.departureLive}:00Z`)
-                    );
-                    self.updateFilteredDepartures();
-                    self.updateDom();
-                }
-            } else {
-                Log.error("[MMM-MVG]: Failed to load departures or no departures found.");
-            }
-        } catch (error) {
-            Log.error("[MMM-MVG]: Error fetching departures:", error);
-        }
-    },
-
-    filterDepartures (departures) {
-        const self = this;
-        const filterKeys = Object.keys(self.config.filter);
-        const minTime = this.config.minTimeUntilDeparture;
-
-        return departures.filter(departure => {
-            const minutesUntilDeparture = self.calculateTimeUntil(departure.departureLive);
-            if (minutesUntilDeparture < minTime) return false;
-
-            if (filterKeys.length === 0 || self.config.filter.hasOwnProperty("all")) return true;
-
-            const lineFilter = self.config.filter[departure.line.number];
-            if (!lineFilter) return false;
-
-            if (Array.isArray(lineFilter)) {
-                return lineFilter.includes(departure.direction);
-            }
-
-            return departure.direction === lineFilter || lineFilter === "";
+    loadDepartures() {
+        this.sendSocketNotification("GET_DEPARTURES", {
+            stopId: this.config.stopId,
+            destinationStopId: this.config.destinationStopId,
+            lineFilter: this.config.lineFilter,
+            destinationFilter: this.config.destinationFilter,
+            identifier: this.identifier
         });
-    },
-
-    updateFilteredDepartures () {
-        const now = new Date();
-        this.filteredDepartures = this.departures.filter(departure => {
-            const departureDate = new Date();
-            departureDate.setHours(departure.departureLive.split(":")[0]);
-            departureDate.setMinutes(departure.departureLive.split(":")[1]);
-            return departureDate >= now;
-        });
-    },
-
-    scheduleUpdate () {
-        setInterval(() => {
-            this.loadDepartures();
-        }, 300000);
-    },
-
-    scheduleMinuteUpdate () {
-        const now = new Date();
-        const msUntilNextMinute = (60 - now.getSeconds()) * 1000;
-
-        setTimeout(() => {
-            this.updateFilteredDepartures();
-            this.updateDom();
-            setInterval(() => {
-                this.updateFilteredDepartures();
-                this.updateDom();
-            }, 60000);
-        }, msUntilNextMinute);
     }
 });

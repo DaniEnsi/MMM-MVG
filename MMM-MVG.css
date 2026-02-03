@@ -1,150 +1,108 @@
-.MMM-MVG .module-content {
-  margin: 0;
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.mvg-table-wrapper {
-  width: auto;
-  max-width: 100%;
-  overflow: visible;
+.mvg-wrapper {
+  width: 100%;
 }
 
 .mvg-table {
-  width: auto;
-  table-layout: auto;
+  width: 100%;
   border-collapse: collapse;
-  font-size: inherit;
-  line-height: 1.4;
 }
 
-.mvg-table td {
-  padding: 0.15em 0.4em;
-  vertical-align: middle;
-  box-sizing: border-box;
-}
-
-.icon-cell {
-  width: 1%;
-  padding-right: 0.5em;
-  padding-left: 0;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.productsvg {
-  height: 1em;
-  width: auto;
-  display: block;
-  vertical-align: middle;
-}
-
-.line-cell {
-  width: 1%;
-  padding-right: 0.6em;
-  text-align: left;
-  white-space: nowrap;
-  font-weight: bold;
-}
-
-.direction-cell {
-  padding-right: 1em;
-  white-space: nowrap;
-  overflow: visible;
-  text-overflow: ellipsis;
-  max-width: 250px;
-  min-width: 80px;
-}
-
-.time-cell {
-  width: 1%;
-  padding-right: 0.5em;
-  text-align: right;
-  white-space: nowrap;
-  font-weight: 500;
-}
-
-.until-cell {
-  width: 1%;
-  padding-left: 0.5em;
-  padding-right: 0;
-  text-align: right;
-  white-space: nowrap;
-  opacity: 0.8;
-  font-size: 0.9em;
-}
-
-.notification-cell {
-  padding: 0.4em 0;
-  max-width: 25vw !important;
-  overflow: visible;
-}
-
-.mvg-table tr.departure-row {
+.mvg-table .header-row th {
+  padding: 2px 5px;
+  font-size: 0.7em;
+  font-weight: normal;
+  opacity: 0.5;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.mvg-table tr.departure-row:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.01);
+.mvg-table .header-row .h-icon,
+.mvg-table .header-row .h-line,
+.mvg-table .header-row .h-dest {
+  text-align: left;
 }
 
-.mvg-table tr:last-child {
-  border-bottom: none;
+.mvg-table .header-row .h-time,
+.mvg-table .header-row .h-arrival,
+.mvg-table .header-row .h-leave {
+  text-align: right;
 }
 
-.scroll-container {
-  overflow: visible;
+.mvg-table .header-row .h-countdown {
+  text-align: center;
+}
+
+.mvg-table td {
+  padding: 2px 5px;
+  vertical-align: middle;
   white-space: nowrap;
-  width: 100%;
-  position: relative;
-  padding: 0.2em 0;
-  mask-image: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0) 0%,
-    rgb(0, 0, 0) 8%,
-    rgb(0, 0, 0) 92%,
-    rgba(0, 0, 0, 0) 100%
-  );
+  font-size: 0.9em;
 }
 
-.scroll-text {
-  display: inline-block;
-  padding-left: 100%;
-  animation: scroll-animation linear infinite;
-  white-space: nowrap;
+.mvg-table td.icon {
+  width: 18px;
+  padding-right: 2px;
+}
+
+.mvg-table td.line {
+  font-weight: bold;
+  width: 32px;
+}
+
+.mvg-table td.dest {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mvg-table td.time {
+  text-align: right;
   font-size: 0.85em;
-  opacity: 0.9;
+  padding-left: 8px;
 }
 
-@keyframes scroll-animation {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100%);
-  }
+.mvg-table td.arrival {
+  text-align: right;
+  opacity: 0.6;
+  font-size: 0.85em;
+  padding-left: 8px;
 }
 
-.top.center .MMM-MVG,
-.upper.third .MMM-MVG,
-.middle.center .MMM-MVG,
-.lower.third .MMM-MVG,
-.bottom.center .MMM-MVG,
-.bottom.bar .MMM-MVG {
-  width: fit-content !important;
-  max-width: 25vw !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+.mvg-table td.leave {
+  text-align: right;
+  opacity: 0.5;
+  font-size: 0.85em;
+  padding-left: 8px;
 }
 
-.top.center .MMM-MVG .direction-cell,
-.upper.third .MMM-MVG .direction-cell,
-.middle.center .MMM-MVG .direction-cell,
-.lower.third .MMM-MVG .direction-cell,
-.bottom.center .MMM-MVG .direction-cell,
-.bottom.bar .MMM-MVG .direction-cell {
-  max-width: 150px !important;
+.mvg-table td.countdown {
+  text-align: center;
+  padding-left: 8px;
+  min-width: 40px;
+}
+
+.line-icon {
+  height: 18px;
+  width: 18px;
+}
+
+.delay-late {
+  color: #ff6b6b;
+  font-size: 0.85em;
+  font-weight: bold;
+}
+
+.delay-early {
+  color: #51cf66;
+  font-size: 0.85em;
+  font-weight: bold;
+}
+
+.urgent {
+  color: #ff4444;
+  font-weight: bold;
+}
+
+.soon {
+  color: #ffaa00;
+  font-weight: bold;
 }

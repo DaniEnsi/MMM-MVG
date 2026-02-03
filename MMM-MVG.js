@@ -11,6 +11,8 @@ Module.register("MMM-MVG", {
 
     start() {
         this.departures = [];
+        // Create a unique identifier based on config to prevent cross-module data mixing
+        this.customId = `${this.config.stopId}_${this.config.destinationStopId || "none"}_${this.config.header || ""}`;
         // Stagger initial load based on module index to avoid simultaneous requests
         const delay = Math.random() * 2000;
         setTimeout(() => this.loadDepartures(), delay);
@@ -19,7 +21,7 @@ Module.register("MMM-MVG", {
     },
 
     socketNotificationReceived(notification, payload) {
-        if (notification === "DEPARTURES" && payload.identifier === this.identifier) {
+        if (notification === "DEPARTURES" && payload.identifier === this.customId) {
             this.departures = payload.departures;
             this.updateDom();
         }
@@ -159,7 +161,7 @@ Module.register("MMM-MVG", {
             destinationStopId: this.config.destinationStopId,
             lineFilter: this.config.lineFilter,
             destinationFilter: this.config.destinationFilter,
-            identifier: this.identifier
+            identifier: this.customId
         });
     }
 });

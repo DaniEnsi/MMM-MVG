@@ -1,149 +1,189 @@
-# MMM-MVVWiesty [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wiesty/MMM-MVVWiesty/raw/master/LICENSE) <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg"/>
+# MMM-MVG
 
-MagicMirror² module to display public transport from Munich in Germany.
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![MagicMirror²](https://img.shields.io/badge/MagicMirror²-Module-blueviolet)](https://magicmirror.builders/)
+<img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg"/>
 
-![Screenshot](./assets/example.png)
+A MagicMirror² module to display Munich public transport departures with real-time delay information, walking time countdowns, and destination arrival times.
 
-## Dependencies
+> **Note:** This module is an improved fork of [MMM-MVVWiesty](https://github.com/wiesty/MMM-MVVWiesty) by [wiesty](https://github.com/wiesty). Many thanks to the original creator for the foundation!
 
-* instance of [MagicMirror²](https://github.com/MagicMirrorOrg/MagicMirror)
+<!-- TODO: Add screenshot -->
+<img width="400" alt="Module Screenshot" src="https://via.placeholder.com/400x200?text=Screenshot+Coming+Soon" />
+
+## Features
+
+- **Real-time departures** from Munich MVV/MVG public transport
+- **Delay indicators** showing +/- minutes with color coding (red for late, green for early)
+- **Walking time countdown** - know when you need to leave, not just when the train departs
+- **Destination arrival times** - see when you'll arrive at your destination station
+- **Line & destination filtering** - show only relevant trains for your commute
+- **Multi-instance support** - run multiple instances without API rate limiting
+- **Clean, minimal UI** - matches MagicMirror aesthetic
+
+## Requirements
+
+- An instance of [MagicMirror²](https://github.com/MagicMirrorOrg/MagicMirror)
+- A Munich MVV stop ID (see Installation)
 
 ## Installation
 
-1. Clone this repository in your MagicMirror installation into the modules directory:
+1. Navigate to your MagicMirror modules directory:
 
-    ```bash
-    cd ~/MagicMirror/modules
-    git clone https://github.com/wiesty/MMM-MVVWiesty
-    ```
+```bash
+cd ~/MagicMirror/modules
+```
 
-2. Head over to [mvv-muenchen.de](https://www.mvv-muenchen.de/fahrplanauskunft/fuer-entwickler/opendata/index.html) and download "Haltestellenliste (CSV)".
-3. Search your station and modify the config template below.
-4. Add configuration to your `config.js`.
+2. Clone this repository:
 
-## Config
+```bash
+git clone https://github.com/daniensi/MMM-MVG.git
+```
+
+3. Find your stop ID:
+   - Go to [mvv-muenchen.de](https://www.mvv-muenchen.de/fahrplanauskunft/fuer-entwickler/opendata/index.html)
+   - Download "Haltestellenliste (CSV)"
+   - Search for your station and note the stop ID (e.g., `de:09162:6`)
+
+4. Add the configuration to your `config.js` (see below)
+
+## Configuration
+
+Add the module to your `config.js`:
 
 ```js
-    {
-        module: "MMM-MVVWiesty",
-        position: "bottom_left",
-        config: {
-            maxEntries: 5,                  // Maximum number of departures to display
-            stopId: "de:09162:6",           // Stop ID for your station
-            filter: {},                     // Filter by line and/or direction (optional)
-            displayNotifications: true,     // Show notifications for each departure if available
-            displayBundled: true,           // prevent notifications beeing displayed multiple times
-            scrollSpeed: 40,                // Speed for scrolling notifications
-            minTimeUntilDeparture: 0        // Minimum time in minutes until departure to display
-        }
-    },
-
+{
+    module: "MMM-MVG",
+    position: "bottom_left",
+    header: "Marienplatz",
+    config: {
+        stopId: "de:09162:6",           // Your stop ID (required)
+        maxEntries: 5,                   // Number of departures to show
+        walkingTime: 5,                  // Minutes to walk to the station
+        showDelay: true,                 // Show delay indicators
+        lineFilter: [],                  // Filter by line (e.g., ["U3", "U6"])
+        destinationFilter: [],           // Filter by destination keywords
+        destinationStopId: null          // Optional: destination for arrival times
+    }
+}
 ```
 
 ### Configuration Options
 
-* **maxEntries**: The maximum number of departures to display on the screen.
-* **stopId**: The unique ID for the stop. Find this ID from the MVV Haltestellenliste CSV.
-* **filter**: Object for filtering departures by line number and/or direction (details below).
-* **displayNotifications**: Enables or disables notifications for each departure, such as delays or route changes.
-* **scrollSpeed**: The speed at which notification text scrolls across the screen.
-* **minTimeUntilDeparture**: Specifies the minimum time (in minutes) for departures to be displayed. For example, if set to `3`, only departures leaving in 3 minutes or more will appear.
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `stopId` | String | `"de:09162:6"` | **Required.** The MVV stop ID for your station |
+| `maxEntries` | Number | `5` | Maximum number of departures to display |
+| `walkingTime` | Number | `0` | Minutes needed to walk to the station. When set, shows "Leave" column with countdown |
+| `showDelay` | Boolean | `true` | Show delay indicators (+2, -1, etc.) next to departure times |
+| `lineFilter` | Array | `[]` | Filter to specific lines (e.g., `["U3", "S8"]`). Empty = all lines |
+| `destinationFilter` | Array | `[]` | Filter by destination keywords (e.g., `["Garching"]`). Empty = all destinations |
+| `destinationStopId` | String | `null` | If set, shows estimated arrival time at this destination station |
 
-### Filter by Line and Direction
+### Example: Commuter Setup
 
-You can filter departures by both line number and direction. To do so, add the line numbers as keys and the desired directions as values in the `filter` object in your module configuration. (Be sure to type the exact name of the line number and for the for the direction. TRAM and BUS only have Numbers. (Tram 16 would be "16", and BUS 123 would be "123")
-
-Example:
-
-```js
-    filter: {
-      "S8": "Herrsching",
-      "U2": "Messestadt Ost"
-    },
-```
-
-With the above configuration, the module will only display departures for the S8 line going towards Herrsching and the U2 line towards Messestadt Ost.
-
-### Filter by Line Only
-
-If you want to display departures for certain lines regardless of their direction, simply provide the line number with an empty string as the value. For example:
+Show only relevant trains for your daily commute with walking time:
 
 ```js
-    filter: {
-      "16": "",
-      "S8": ""
-    },
+{
+    module: "MMM-MVG",
+    position: "bottom_left",
+    header: "To Work",
+    config: {
+        stopId: "de:09162:6",
+        maxEntries: 4,
+        walkingTime: 7,
+        lineFilter: ["U6"],
+        destinationFilter: ["Garching"],
+        destinationStopId: "de:09184:460"
+    }
+}
 ```
 
-This configuration results in the module showing all departures for the 16 and S8 lines, irrespective of their direction.
+### Example: Multiple Stations
 
-### Multiple Directions Example
-
-You can specify multiple destinations for a single line by using an array. For example:
+You can run multiple instances for different stations:
 
 ```js
-    filter: {
-      "S2": ["Petershausen", "Isartor", "Ostbahnhof"]
-    },
+{
+    module: "MMM-MVG",
+    position: "bottom_left",
+    header: "U-Bahn",
+    config: {
+        stopId: "de:09162:6",
+        lineFilter: ["U3", "U6"]
+    }
+},
+{
+    module: "MMM-MVG",
+    position: "bottom_left",
+    header: "S-Bahn",
+    config: {
+        stopId: "de:09162:1",
+        lineFilter: ["S1", "S8"]
+    }
+}
 ```
 
-This configuration will display all S2 departures heading towards Petershausen, Isator, or Ostbahnhof. If any of these directions match the current destination of the line, the departure will be shown.
+## Display Columns
 
-### Display All Departures
+| Column | Description |
+|--------|-------------|
+| Icon | Transport type icon (U-Bahn, S-Bahn, Tram, Bus) |
+| Line | Line number (e.g., U6, S8, 100) |
+| Destination | Final destination of the train |
+| Departure | Actual departure time with delay indicator |
+| Arrival | Estimated arrival at destination (if configured) |
+| Leave | Time you need to leave home (if walkingTime > 0) |
+| Countdown | Minutes until you need to leave / train departs |
 
-To show all departures without any filtering, you can either leave the `filter` object empty, delete it from the config or include the key `all` with an empty string as its value. Both of these configurations will display every departure:
+### Color Indicators
 
-```js
-    filter: {},
+- **Red (+X)** - Train is running late by X minutes
+- **Green (-X)** - Train is running early by X minutes
+- **Orange countdown** - Less than 3 minutes to leave
+- **Red "Now"** - Leave immediately to catch the train
+
+## Project Structure
+
+```
+MMM-MVG/
+├── MMM-MVG.js          # Main module logic
+├── MMM-MVG.css         # Styling
+├── node_helper.js      # API fetching with queue system
+├── package.json        # Module metadata
+├── assets/             # Transport type icons
+│   ├── ubahn.svg
+│   ├── sbahn.svg
+│   ├── tram.svg
+│   └── bus.svg
+└── README.md           # This file
 ```
 
-Or:
+## How It Works
 
-```js
-    filter: {
-      "all": ""
-    },
-```
+1. **Data Fetching** - Uses the MVV departureFinder API to get real-time departures
+2. **Queue System** - Prevents API rate limiting when running multiple instances
+3. **Delay Calculation** - Compares planned vs actual departure times
+4. **Arrival Enrichment** - Optionally queries trip planner API for destination arrival times
+5. **Smart Filtering** - Shows only departures you can still catch based on walking time
 
-This flexible filtering system ensures that you can always access the departures that are most relevant to you without any unnecessary clutter.
+## Improvements Over Original
 
-### Overall CSS Layout (`.MMM-MVVWiesty` and `.mvv-table`) - useful for custom css
+This fork adds several enhancements over the original [MMM-MVVWiesty](https://github.com/wiesty/MMM-MVVWiesty):
 
-* **`.MMM-MVVWiesty .module-content`**: Limits the module’s maximum width to `25vw`, allowing it to adjust responsively up to that width. The module is centered horizontally and has overflow hidden to prevent text spilling out.
-* **`.mvv-table`**: Sets the table width to `100%`, collapses borders for a cleaner look, and uses a fixed table layout to maintain column widths. This class also sets the font size and line height.
+- **Walking time countdown** - See when to leave, not just when trains depart
+- **Delay indicators** - Visual +/- minute indicators with color coding
+- **Destination arrival times** - Know when you'll arrive at work
+- **Line & destination filtering** - Show only relevant trains
+- **Multi-instance queue** - Prevents API rate limiting with multiple stations
+- **Staggered startup** - Avoids simultaneous API requests on load
+- **Cleaner UI** - Refined table layout with better column alignment
 
-### Cell-Specific Classes
+## License
 
-* **`.icon-cell` & `.line-cell`**: These two cells are the narrowest, each set to a width of `1vw` to minimize spacing. Both cells have right padding (`5px`) and text aligned to the start (left) for a compact display of line numbers and icons.
+MIT License - See [LICENSE](LICENSE) for details.
 
-* **`.direction-cell`**: Displays the direction text of each departure with specific settings:
+---
 
-  * **Width**: `8vw`, allowing for adequate space without pushing other elements off.
-  * **Overflow**: `hidden`, `white-space: nowrap`, and `text-overflow: ellipsis` ensure that long text will not wrap and instead shows an ellipsis (`...`) when text is truncated.
-  * **Customizations**: If direction text is cut off or requires more space, consider increasing `width` or adjusting `text-overflow`.
-* **`.time-cell`**: Displays the departure time, with a width of `6vw`, making it slightly narrower than the direction cell but wide enough for typical HH
-
-    formatting. It also has `white-space: nowrap` and `overflow: hidden` to ensure text remains on one line.
-
-* **`.until-cell`**: Shows the “time until departure” information with a narrower width of `3vw`. This cell is also set to nowrap and hidden overflow to keep the text compact. If more padding is needed, adjust the `padding` or `width` as desired.
-
-* **`.notification-cell`**: Used for displaying notifications. It spans all columns (`colSpan=5`) and has overflow hidden to keep long notification text within bounds.
-
-## Changelog
-
-
-### v2.0.2 - Latest release
-
-* **Bundled notifications**: Added an option to prevent double notifications.
-
-### v2.0.1
-
-* **Expanded Filtering**: The `filter` option now supports multiple directions per line using an array format, allowing more precise control over which departures are displayed. For example, `"S2": ["Petershausen", "Isator", "Ostbahnhof"]` will show all S2 departures toward these specified destinations.
-* **New Icon**: Added an icon for ExpressBus to enhance line identification.
-
-### v2.0.0
-
-* **New Config Option**: `minTimeUntilDeparture` - Filters out departures that are too soon, allowing you to show only those that are X minutes or more in the future.
-* **New Config Option**: `displayNotifications` - Enables or disables the display of notifications for each departure.
-* **Removed**: `updateInterval` option - The module now fetches data every 5 minutes by default, updating the displayed times every minute. This change reduces server load by avoiding excessive API requests.
-* **Improved Filtering**: Departures are now sorted and filtered based on the remaining time to departure, allowing the module to only display the most relevant and up-to-date information.
+**Original module by [wiesty](https://github.com/wiesty) • Enhanced with ❤️ for the MagicMirror community**

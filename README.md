@@ -1,15 +1,11 @@
 # MMM-MVG
 
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![MagicMirror²](https://img.shields.io/badge/MagicMirror²-Module-blueviolet)](https://magicmirror.builders/)
-<img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg"/>
-
 A MagicMirror² module to display Munich public transport departures with real-time delay information, walking time countdowns, and destination arrival times.
 
 > **Note:** This module is an improved fork of [MMM-MVVWiesty](https://github.com/wiesty/MMM-MVVWiesty) by [wiesty](https://github.com/wiesty). Many thanks to the original creator for the foundation!
 
 <!-- TODO: Add screenshot -->
-<img width="400" alt="Module Screenshot" src="https://via.placeholder.com/400x200?text=Screenshot+Coming+Soon" />
+<img width="488" height="450" alt="image" src="https://github.com/user-attachments/assets/f100842e-3815-4b93-a39c-c7fdd30e86d7" />
 
 ## Features
 
@@ -186,4 +182,4 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
-**Original module by [wiesty](https://github.com/wiesty) • Enhanced with ❤️ for the MagicMirror community**
+**Original module by [wiesty](https://github.com/wiesty) • Enhanced by [dani](https://github.com/daniensi) for the MagicMirror community**
